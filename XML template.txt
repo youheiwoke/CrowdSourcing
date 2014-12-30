@@ -1,0 +1,23 @@
+<task>
+	<question></question>
+	<attachment></attachment>
+	<option value="true" />
+	<option value="false" />
+</task>
+
+
+XML template send to the worker:
+<task>
+	<question></question>
+	<attachment></attachment>
+	<option value="true" />
+	<option value="false" />
+	<XMLpath></XMLpath>
+</task>
+
+
+answer XML template:
+<task>
+	<XMLpath></XMLpath>
+	<response></response>
+</task>

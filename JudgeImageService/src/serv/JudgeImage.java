@@ -10,8 +10,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.UUID;
 
-import javax.swing.JOptionPane;
-
 import opration.MicroTaskOperation;
 
 import org.apache.axis.encoding.Base64;
@@ -21,6 +19,9 @@ import org.jdom2.Text;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
+import aggregator.Aggregator;
+import aggregator.NaiveAggregator;
+
 public class JudgeImage {
 	/**
 	 * @param picStr
@@ -28,8 +29,7 @@ public class JudgeImage {
 	 * @param format
 	 *            is the format of the picture.
 	 * @param guid
-	 *            the string of JADE agent's name obtained by using
-	 *            getAID().getName().
+	 *            consumer id.
 	 * @param deadline
 	 *            deadline of the work(yyyy-MM-dd HH:mm:ss).
 	 * @throws IOException
@@ -39,7 +39,7 @@ public class JudgeImage {
 	 * @throws InstantiationException
 	 */
 	public static String uploadPicture(String question, String picStr,
-			String format, String guid, String deadline)
+			String format, String id, String deadline)
 			throws InstantiationException, IllegalAccessException,
 			ClassNotFoundException, SQLException {
 		if (picStr == null) {
@@ -52,13 +52,11 @@ public class JudgeImage {
 		// write to file.
 		UUID uuid = UUID.randomUUID();
 		String imgFilePath;
-		imgFilePath = System.getProperty("user.dir") + "\\tmp\\"
-				+ uuid.toString() + "." + format;
+		imgFilePath = "\\share\\tmp\\" + uuid.toString() + "." + format;
 		File f = new File(imgFilePath);
 		while (f.exists()) {
 			uuid = UUID.randomUUID();
-			imgFilePath = System.getProperty("user.dir") + "\\tmp\\"
-					+ uuid.toString() + "." + format;
+			imgFilePath = "\\share\\tmp\\" + uuid.toString() + "." + format;
 			f = new File(imgFilePath);
 		}
 		try {
@@ -100,10 +98,14 @@ public class JudgeImage {
 		}
 
 		// create a new micro task record in the database.
-		MicroTaskOperation.insertMicroTask(System.getProperty("user.dir")
-				+ "\\tmp\\" + uuid.toString() + ".xml", guid, deadline);
+		MicroTaskOperation.insertMicroTask("\\share\\tmp\\" + uuid.toString()
+				+ ".xml", id, deadline);
 
-		return guid + "Upload Succeed.";
+		Aggregator agg = new NaiveAggregator();
+		String answer = agg.aggrerator("\\share\\tmp\\" + uuid.toString()
+				+ ".xml", deadline);
+
+		return answer;
 	}
 
 	/**

@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
@@ -21,11 +20,8 @@ import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.xml.sax.InputSource;
 
-import aggregator.Aggregator;
-import aggregator.NaiveAggregator;
 import dbObject.AgentInfo;
 import dbObject.MicroTask;
-import dbObject.WorkerResponse;
 import opration.AgentDBOperation;
 import opration.MicroTaskOperation;
 import opration.ResponseDBOperation;
@@ -43,11 +39,11 @@ public class ALAgent extends Agent {
 	protected void setup() {
 		System.out.println("ALAgent address: "
 				+ getAID().getAddressesArray()[0]);
+		System.out.println("ALAgent guid: " + getAID().getName());
 		ParallelBehaviour pb = new ParallelBehaviour(this,
 				ParallelBehaviour.WHEN_ALL);
 		pb.addSubBehaviour(processInitial());
 		pb.addSubBehaviour(processMessage());
-		pb.addSubBehaviour(processCreating());
 		pb.addSubBehaviour(checkActive());
 		this.addBehaviour(pb);
 		System.out.println("ALAgent started!");
@@ -248,67 +244,6 @@ public class ALAgent extends Agent {
 
 			}
 
-		};
-	}
-
-	/**
-	 * Polling for all creating micro task which have passed the deadline, query
-	 * for all responses and use an aggregator to select a result and response
-	 * to the consumer.
-	 */
-	private CyclicBehaviour processCreating() {
-		return new CyclicBehaviour() {
-
-			@Override
-			public void action() {
-				try {
-					List<MicroTask> tasks = MicroTaskOperation
-							.deadlineTask(new Date());
-					if (tasks.size() > 0) {
-						for (MicroTask task : tasks) {
-							List<WorkerResponse> responses = ResponseDBOperation
-									.queryResponse(task.template);
-							if (responses.size() > 0) {
-								Aggregator agg = new NaiveAggregator();
-								WorkerResponse selected = agg
-										.aggrerator(responses);
-
-								if (selected != null) {
-									ResponseDBOperation
-											.acceptResponse(selected.id);
-
-									// set the task state to finished.
-									MicroTaskOperation.updateMicroTask(
-											task.template, task.consumer,
-											"finished");
-
-									// send the result to the consumer.
-									AgentInfo consumerInfo = AgentDBOperation
-											.getConsumer(selected.template);
-									AID consumer = new AID(consumerInfo.guid,
-											true);
-									consumer.addAddresses(consumerInfo.address);
-									ACLMessage inform = new ACLMessage(
-											ACLMessage.INFORM);
-									inform.addReceiver(consumer);
-									inform.setContent(selected.responseString);
-									send(inform);
-								}
-							}
-						}
-					}
-				} catch (InstantiationException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				} catch (ParseException e) {
-					e.printStackTrace();
-				}
-			}
 		};
 	}
 
