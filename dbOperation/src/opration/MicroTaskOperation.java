@@ -103,6 +103,45 @@ public class MicroTaskOperation {
 		ps.close();
 		conn.close();
 	}
+	
+	/**
+	 * 
+	 * @param template
+	 * @param state
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
+	public static void updateMicroTask(String template,
+			String state) throws InstantiationException,
+			IllegalAccessException, ClassNotFoundException, SQLException {
+		if (!state.equals("creating") && !state.equals("finished")) {
+			System.out.println("updateMicroTask(): illegal state.");
+			return;
+		}
+
+		Connection conn = ConnectDB.connect();
+		String sql = "select * from microtask where template=?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, template);
+		ResultSet rs = ps.executeQuery();
+		if (rs.last()) {
+			sql = "update microtask set state=? where template=?";
+			ps = conn.prepareStatement(sql);
+			ps.setString(1, state);
+			ps.setString(2, template);
+			if (ps.executeUpdate() == 0) {
+				System.out
+						.println("updateMicroTask(): error occured when updating.");
+			}
+		} else {
+			System.out.println("updateMicroTask(): no such micro task exists.");
+		}
+		rs.close();
+		ps.close();
+		conn.close();
+	}
 
 	/**
 	 * 

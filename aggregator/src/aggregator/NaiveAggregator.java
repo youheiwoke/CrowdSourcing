@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import opration.MicroTaskOperation;
 import opration.ResponseDBOperation;
 import dbObject.WorkerResponse;
 
@@ -70,6 +71,8 @@ public class NaiveAggregator implements Aggregator {
 				}
 			}
 			ResponseDBOperation.acceptResponse(selected.id);
+
+			MicroTaskOperation.updateMicroTask(taskXML, "finished");
 		} catch (ParseException e) {
 			e.printStackTrace();
 			return "aggrerator(): ParseException.";
